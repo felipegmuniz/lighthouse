@@ -12,6 +12,8 @@ library(leaflet)
 # To geocode
 library(ggmap)
 
+options(digits = 9)
+
 # Read the table from wikipedia
 url <- "https://en.wikipedia.org/wiki/List_of_lighthouses_in_France"
   
@@ -50,14 +52,24 @@ lh_table <- lh_table %>% add_column(Latitude = as.numeric(lh_lats),
 
 # Filter observations with missing lats or lons
 lh_uncoded <- lh_table %>% filter(is.na(Longitude) & is.na(Latitude))
-lh_uncoded
 
-geocode("Giraglia lighthouse")
+# Fix the name of observation 11 to "Phare du Four"
+lh_uncoded[11,1] <- "Phare du Four"
+lh_uncoded[1,1] <- "Phare de la Giraglia"
 
+# Geocode missing values for lat and lon
+lh_uncoded_fixed <- geocode(lh_uncoded$Name)
 
+# Update missing values of lats and lons to lh_uncoded
+lh_uncoded <- lh_uncoded %>% 
+  mutate(Latitude = lh_uncoded_fixed$lat, Longitude = lh_uncoded_fixed$lon)
 
+# Update lh_table with lh_uncoded
+lh_table <- lh_uncoded
 
 as_tibble(lh_table)
+
+
 
 lighthouse_france <- data.frame(lh_names, lh_lats, lh_lngs) %>%
   rename(Name = lh_names, Latitude = lh_lats, Longitude = lh_lngs)
