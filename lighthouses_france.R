@@ -9,6 +9,8 @@ library(polite)
 
 # To map data
 library(leaflet)
+# To geocode
+library(ggmap)
 
 # Read the table from wikipedia
 url <- "https://en.wikipedia.org/wiki/List_of_lighthouses_in_France"
@@ -42,12 +44,20 @@ lh_lats <- str_extract_all(lh_lats, "([0-9]{2}).([0-9]{4,7})")
 # Remove Location & Coordinates column from lh_table
 lh_table <- lh_table[, -4]
 
-# Insert Lat and Lon columns
-lh_table <- lh_table %>% add_column(Latitude = lh_lats, Longitude = lh_lons)
+# Insert Lat and Lon columns from lh_lats and lh_lons converted as numeric
+lh_table <- lh_table %>% add_column(Latitude = as.numeric(lh_lats), 
+                                    Longitude = as.numeric(lh_lons))
 
 # Filter observations with missing lats or lons
-lh_table
-  
+lh_uncoded <- lh_table %>% filter(is.na(Longitude) & is.na(Latitude))
+lh_uncoded
+
+geocode("Giraglia lighthouse")
+
+
+
+
+as_tibble(lh_table)
 
 lighthouse_france <- data.frame(lh_names, lh_lats, lh_lngs) %>%
   rename(Name = lh_names, Latitude = lh_lats, Longitude = lh_lngs)
