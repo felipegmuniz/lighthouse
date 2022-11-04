@@ -32,16 +32,6 @@ lh_table <- data.frame(lh_table)
 lh_table <- lh_table[, -c(2, 7)]
 str(lh_table)
 
-# Create a list of the location & coordinates column
-##lh_coord <- lh_table[,4]
-
-# Extract the latitudes from lh_coord
-lh_lats <- str_extract_all(lh_coord, "([0-9]{2}).([0-9]{4,7});")
-lh_lons <- str_extract_all(lh_coord, "-([0-9]{1,2}).([0-9]{4,7})$")
-
-# Remove alien characters from latitude values
-lh_lats <- str_extract_all(lh_lats, "([0-9]{2}).([0-9]{4,7})")
-
 # Remove Location & Coordinates column from lh_table
 lh_table <- lh_table[, -4]
 lh_table_name <- str_remove_all(lh_table$Name, "\\[[^\\]\\[]*]")
