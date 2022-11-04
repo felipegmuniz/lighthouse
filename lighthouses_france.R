@@ -12,7 +12,6 @@ library(leaflet)
 # To geocode
 library(ggmap)
 
-options(digits = 9)
 
 # Read the table from wikipedia
 url <- "https://en.wikipedia.org/wiki/List_of_lighthouses_in_France"
@@ -34,7 +33,7 @@ lh_table <- lh_table[, -c(2, 7)]
 str(lh_table)
 
 # Create a list of the location & coordinates column
-lh_coord <- lh_table[,4]
+##lh_coord <- lh_table[,4]
 
 # Extract the latitudes from lh_coord
 lh_lats <- str_extract_all(lh_coord, "([0-9]{2}).([0-9]{4,7});")
@@ -45,33 +44,44 @@ lh_lats <- str_extract_all(lh_lats, "([0-9]{2}).([0-9]{4,7})")
 
 # Remove Location & Coordinates column from lh_table
 lh_table <- lh_table[, -4]
+lh_table_name <- str_remove_all(lh_table$Name, "\\[[^\\]\\[]*]")
+lh_table_year <- str_remove_all(lh_table$Year.built, "\\[[^\\]\\[]*]")
+lh_table <- lh_table %>%
+  mutate(Name = lh_table_name, Year.built = lh_table_year)
 
-# Insert Lat and Lon columns from lh_lats and lh_lons converted as numeric
-lh_table <- lh_table %>% add_column(Latitude = as.numeric(lh_lats), 
-                                    Longitude = as.numeric(lh_lons))
+# Fix the names of observations 1 and 11 to allow geocode
 
-# Filter observations with missing lats or lons
-lh_uncoded <- lh_table %>% filter(is.na(Longitude) & is.na(Latitude))
-
-# Fix the name of observation 11 to "Phare du Four"
-lh_uncoded[11,1] <- "Phare du Four"
-lh_uncoded[1,1] <- "Phare de la Giraglia"
-
-# Geocode missing values for lat and lon
-lh_uncoded_fixed <- geocode(lh_uncoded$Name)
-
-# Update missing values of lats and lons to lh_uncoded
-lh_uncoded <- lh_uncoded %>% 
-  mutate(Latitude = lh_uncoded_fixed$lat, Longitude = lh_uncoded_fixed$lon)
-
-# Update lh_table with lh_uncoded
-lh_table <- lh_uncoded
-
-as_tibble(lh_table)
+lh_table[11,1] <- "Phare du Four"
+lh_table[3,1] <- "Phare de la Giraglia"
+lh_table[15,1] <- "Phare de la Jument"
+lh_table[6,1] <- "Roches-Douvres, France"
+lh_table[8,1] <- "Triagoz"
+lh_table[9,1] <- "Phare d'Ar-men, îlle-de-Sein, France"
+lh_table[18,1] <- "Phare de La Vieille"
+lh_table[24,1] <- "Phare des Pierres Noires, Finistère, France"
+lh_table[29,1] <- "Phare du Four"
+lh_table[36,1] <- "Phare du Risban"
+lh_table[41,1] <- "Pierre-de-Herpin, France"
 
 
+# Geocode lighthouse locations with lats and lons
+lh_coord <- geocode(lh_table$Name)
+
+# Insert geocoded lat and lon values to lh_table
+lh_table <- lh_table %>%
+  mutate(Latitude = lh_coord$lat, Longitude = lh_coord$lon)
+
+lh_table[6,5] <- 49.11696108425436
+lh_table[6,6]<- -2.8166881826868746
+
+# Create map with geocoded lighthouses in France
 lh_map <- leaflet() %>%
-    addProviderTiles("Esri") %>%
+  # Add the OSM, CartoDB and Esri tiles
+  addTiles(group = "OSM") %>% 
+  addProviderTiles("CartoDB", group = "CartoDB") %>% 
+  addProviderTiles("Esri", group = "Esri") %>% 
+  # Use addLayersControl to allow users to toggle between basemaps
+  addLayersControl(baseGroups = c("OSM", "CartoDB", "Esri")) %>%
     clearMarkers() %>%
     addCircleMarkers(data = lh_table, 
                      radius = 2,
