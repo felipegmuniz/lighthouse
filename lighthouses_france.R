@@ -76,7 +76,12 @@ lh_table[6,6]<- -2.8166881826868746
 
 # Create map with geocoded lighthouses in France
 lh_map <- leaflet() %>%
-    addProviderTiles("Esri") %>%
+  # Add the OSM, CartoDB and Esri tiles
+  addTiles(group = "OSM") %>% 
+  addProviderTiles("CartoDB", group = "CartoDB") %>% 
+  addProviderTiles("Esri", group = "Esri") %>% 
+  # Use addLayersControl to allow users to toggle between basemaps
+  addLayersControl(baseGroups = c("OSM", "CartoDB", "Esri")) %>%
     clearMarkers() %>%
     addCircleMarkers(data = lh_table, 
                      radius = 2,
