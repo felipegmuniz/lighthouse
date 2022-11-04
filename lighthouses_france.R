@@ -70,12 +70,15 @@ lh_table <- lh_uncoded
 as_tibble(lh_table)
 
 
-
-lighthouse_france <- data.frame(lh_names, lh_lats, lh_lngs) %>%
-  rename(Name = lh_names, Latitude = lh_lats, Longitude = lh_lngs)
-
 lh_map <- leaflet() %>%
-    addProviderTiles("CartoDB") %>%
-    addMarkers(data = lighthouse_france)
+    addProviderTiles("Esri") %>%
+    clearMarkers() %>%
+    addCircleMarkers(data = lh_table, 
+                     radius = 2,
+                     color = "red",
+                     popup = ~paste0(
+                       "<b>",Name,"</b>","<br/>",
+                       Lat = lh_table$Latitude,"<br/>", 
+                       Lon = lh_table$Longitude))
 
 lh_map
